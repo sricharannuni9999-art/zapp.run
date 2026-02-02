@@ -1,4 +1,244 @@
----
+--import 'package:flutter/material.dart';
+
+// --- 1. Data Models (Based on your JSON) ---
+
+class ProductVariant {
+  final String name;
+  final bool? isAged;
+  final List<String>? sizes;
+  final String? packSize;
+
+  ProductVariant({required this.name, this.isAged, this.sizes, this.packSize});
+}
+
+class BrandData {
+  final String brandName;
+  final String logoUrl; // Using a placeholder color/icon for now
+  final List<ProductVariant> riceModels;
+  final List<ProductVariant> idliRava;
+  final List<ProductVariant> snacks;
+
+  BrandData({
+    required this.brandName,
+    required this.logoUrl,
+    required this.riceModels,
+    required this.idliRava,
+    required this.snacks,
+  });
+}
+
+// --- 2. Mock Data (Your JSON Input) ---
+
+final List<BrandData> allBrands = [
+  BrandData(
+    brandName: "Royal Harvest",
+    logoUrl: "assets/logo.png", // Placeholder
+    riceModels: [
+      ProductVariant(name: "Premium Sona Masoori", isAged: true, sizes: ["10kg", "25kg"]),
+      ProductVariant(name: "Classic Raw Rice", isAged: false, sizes: ["5kg", "10kg"]),
+    ],
+    idliRava: [
+      ProductVariant(name: "Super Fine Idli Rava", sizes: ["1kg", "5kg"]),
+    ],
+    snacks: [
+      ProductVariant(name: "Spicy Rice Murukku", packSize: "200g"),
+    ],
+  ),
+  // You can add more brands here later
+];
+
+void main() {
+  runApp(const RiceApp());
+}
+
+class RiceApp extends StatelessWidget {
+  const RiceApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.grey[100],
+      ),
+      home: const HomePage(),
+    );
+  }
+}
+
+// --- 3. Home Screen: Shop By Brand ---
+
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Rice Mart"),
+        backgroundColor: Colors.blueAccent,
+        actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.shopping_cart))],
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildPromoBanner(),
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text("Shop By Brand", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 1.2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+              ),
+              itemCount: allBrands.length,
+              itemBuilder: (context, index) {
+                final brand = allBrands[index];
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => BrandStorePage(brand: brand)),
+                    );
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.agriculture, size: 50, color: Colors.green), // Placeholder Logo
+                        const SizedBox(height: 10),
+                        Text(brand.brandName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPromoBanner() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      height: 140,
+      decoration: BoxDecoration(
+        color: Colors.indigo,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Center(
+        child: Text("Flat 10% OFF on 25kg Bags!", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+}
+
+// --- 4. Brand Store Page (The Core Request) ---
+
+class BrandStorePage extends StatelessWidget {
+  final BrandData brand;
+
+  const BrandStorePage({super.key, required this.brand});
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(brand.brandName),
+          backgroundColor: Colors.blueAccent,
+          bottom: const TabBar(
+            indicatorColor: Colors.white,
+            tabs: [
+              Tab(text: "Rice Models"),
+              Tab(text: "Idli Rava"),
+              Tab(text: "Snacks"),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            _buildProductList(brand.riceModels, isRice: true),
+            _buildProductList(brand.idliRava, isRice: false),
+            _buildProductList(brand.snacks, isRice: false),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProductList(List<ProductVariant> products, {required bool isRice}) {
+    if (products.isEmpty) {
+      return const Center(child: Text("No products available"));
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: products.length,
+      itemBuilder: (context, index) {
+        final product = products[index];
+        return Card(
+          elevation: 2,
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  color: Colors.grey[200],
+                  child: const Icon(Icons.image, color: Colors.grey),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(product.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 4),
+                      if (product.isAged == true)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(color: Colors.green[100], borderRadius: BorderRadius.circular(4)),
+                          child: Text("Aged Rice", style: TextStyle(fontSize: 10, color: Colors.green[800])),
+                        ),
+                      const SizedBox(height: 8),
+                      if (product.sizes != null)
+                        Wrap(
+                          spacing: 8,
+                          children: product.sizes!.map((size) => Chip(
+                            label: Text(size),
+                            backgroundColor: Colors.blue[50],
+                            labelStyle: const TextStyle(fontSize: 12),
+                          )).toList(),
+                        ),
+                      if (product.packSize != null)
+                        Text("Pack: ${product.packSize}", style: const TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
 title: Share & Embed
 description: Share & Embed your project on the web.
 ---
